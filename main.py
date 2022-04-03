@@ -6,42 +6,12 @@ import sys
 import pyperclip
 import keyboard
 import beepy
-# import pygame as pg
-import openai
 import json
 import time
+import re
+
 from kb import Kb
-
-# def wait_all_released():
-#     time.sleep(1)
-#     keyboard.release(100)
-#     keyboard.release(31)
-#     time.sleep(1)
-#     while True:
-#         state = keyboard.stash_state()
-#         print(state)
-#         if len(state) == 0: return
-#         time.sleep(0.1)
-
-def copy_text():
-    old = pyperclip.paste()
-    time.sleep(0.5)
-    keyboard.send('ctrl+a')
-    time.sleep(0.5)
-    keyboard.send('ctrl+c')
-    text = pyperclip.paste()
-    time.sleep(0.1)
-    pyperclip.copy(old)
-    return text
-
-def paste_text(text):
-    old = pyperclip.paste()
-    pyperclip.copy(text)
-    keyboard.send('ctrl+a')
-    keyboard.send('ctrl+v')
-    # time.sleep(0.1)
-    pyperclip.copy(old)
-    return
+from ai import Ai
 
 def beep_start():
     keyboard.call_later(lambda: beepy.beep(sound=1), delay=0)
@@ -52,27 +22,6 @@ def beep_success():
 def beep_cancel():
     keyboard.call_later(lambda: beepy.beep(sound=3), delay=0)
 
-class Ai:
-    def __init__(self):
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        if (openai.api_key is None or openai.api_key == ''):
-            raise BaseException('no OPENAI_API_KEY')
-
-    def complete_code(self, code):
-        response = openai.Completion.create(
-            engine="code-davinci-002",
-            prompt="<|endoftext|>" + code,
-            temperature=0,
-            max_tokens=1000,
-            # top_p=1,
-            # frequency_penalty=0,
-            # presence_penalty=0
-            stop=["/* Command:"],
-            stream=True
-        )
-        for part in response:
-            if part["choices"][0]["finish_reason"] is not None: return
-            yield part["choices"][0]["text"]
 
 class App:
     def __init__(self, ai, kb):
@@ -87,31 +36,64 @@ class App:
     def init(self):
         filepath = sys.argv[1] if len(sys.argv) > 1 else 'prompt.txt'
         self.prompt_start = open(filepath).read()
-        # self._hotkey('alt gr, i', self._complete_codex_js_sandbox)
-        self._hotkey('alt gr, alt gr', self._complete_codex_js_sandbox)
+        self._hotkey('alt gr, alt gr', self._autodetected_action)
         self.kb.resume()
 
-    def _complete_codex_js_sandbox(self):
+    def _autodetect(self, text):
+        """return action, lang, text, suffix/instructions"""
+        lang = 'text'
+
+        js_comment_re = '\s*/\*(.*)\*/\s*'
+        js_comment = re.search(js_comment_re, text)
+        if js_comment is not None:
+            lang = 'js'
+
+        py_comment_re = '\s*"""(.*)"""\s*'
+        py_comment = re.search(py_comment_re, text)
+        if py_comment is not None:
+            lang = 'py'
+
+        insert_re = '___'
+        insert = re.search(insert_re, text)
+        if insert is not None:
+            span = insert.span()
+            return 'insert', lang, text[:span[0]], text[span[1]:]
+
+        edit_re = '\n(.*)!!![\w\W]*'
+        edit = re.search(edit_re, text)
+        if edit is not None:
+            if edit[1].strip() == '#':
+                lang == 'py'
+            if edit[1].strip() == '//':
+                lang == 'js'
+            edit_lines_re = re.compile('.*!!!(.*)', re.M)
+            edit_lines = [m.strip() for m in edit_lines_re.findall(text)]
+            instruction = '\n'.join(edit_lines)
+            clean_text = re.sub(edit[0], '', text)
+            return 'edit', lang, clean_text, instruction
+        return 'complete', lang, text, None
+
+    def _autodetected_action(self):
         copied = pyperclip.paste()
-        print('-' * 40, 'Copied:')
-        print(f'{copied[0:100]}...')
+        action, lang, text, opt = self._autodetect(copied)
+        eng = 'text' if lang == 'text' else 'code'
+        print(action, lang, eng)
+        print('text:', text)
+        print('opt:', opt)
 
-        code = self.prompt_start + copied
-        response = self.ai.complete_code(code)
+        stop = None
+        if lang == 'js' and action != 'edit':
+            text = self.prompt_start + text
+            stop = ['/* ']
+        if lang == 'py' and action != 'edit':
+            stop = ['"""']
 
-        return response
-
-    def _complete_all_codex_js_sandbox(self):
-        copied = copy_text()
-        print('-' * 40, 'Copied:')
-        print(f'{copied[0:60]}...')
-
-        code = self.prompt_start + copied
-        response = self.ai.complete_code(code)
-
-        keyboard.send('i')
-        time.sleep(0.1)
-        return response
+        if action == 'insert':
+            return self.ai.complete(eng, text, opt, stop)
+        if action == 'complete':
+            return self.ai.complete(eng, text, opt, stop)
+        if action == 'edit':
+            return self.ai.edit(eng, text, opt)
 
     def _run(self, fn):
         """unhook, run fn, handle errors, handle cancel, type, hook"""
@@ -119,7 +101,6 @@ class App:
         try:
             print('=' * 60)
             res = fn()
-            parts = []
             print('-' * 40, 'Response:')
             for part in res:
                 if keyboard.is_pressed('esc'):
@@ -127,7 +108,6 @@ class App:
                     beep_cancel()
                     self.kb.resume()
                     return
-                parts.append(part)
                 print(part, end='')
                 self.kb.write(part)
             print('OK')
@@ -137,7 +117,8 @@ class App:
             beep_cancel()
         self.kb.resume()
 
-ai = Ai()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+ai = Ai(openai_api_key)
 kb = Kb()
 app = App(ai, kb)
 
