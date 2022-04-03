@@ -10,6 +10,7 @@ import beepy
 import openai
 import json
 import time
+from kb import Kb
 
 # def wait_all_released():
 #     time.sleep(1)
@@ -50,61 +51,6 @@ def beep_success():
 
 def beep_cancel():
     keyboard.call_later(lambda: beepy.beep(sound=3), delay=0)
-
-class Kb:
-    def __init__(self):
-        self.cbs = {}
-        #     'alt gr': {
-        #         'k': lambda: print('k'),
-        #         'l': lambda: print('l'),
-        #     },
-        #     'ctrl': {
-        #         'y': lambda: print('y'),
-        #     },
-        # }
-
-    def add_hotkey(self, hotkey, cb):
-        keys = hotkey.split(', ')
-        lvl = self.cbs
-        for i, key in enumerate(keys):
-            if key not in lvl:
-                if i < len(keys) - 1:
-                    lvl[key] = {}
-                else:
-                    lvl[key] = cb
-            lvl = lvl[key]
-
-    def resume(self):
-        self.level = self.cbs
-        print(self.level)
-        keyboard.on_release(lambda key: self._handle_key(key))
-
-    def pause(self):
-        keyboard.unhook_all()
-
-    def _handle_key(self, key):
-        print(key.name)
-        if key.name in self.level:
-            cb = self.level[key.name]
-            if callable(cb):
-                try:
-                    cb()
-                except BaseException as err:
-                    print(err)
-            else:
-                self.level = cb
-        else:
-            self.level = self.cbs
-
-    def write(self, text):
-        """
-        with delay <=0.03 vscode sometimes inserts unexpected completions that interfere with input
-        Disable "Editor › Inline Suggest: Enabled" option in vscode for more stable behavior.
-        without exact=True '{' and '}' cause strange behaviour
-        without restore_state_after=True it appears that some keys (e.g. 'ctrl') may stay pressed
-        """
-        keyboard.write(text, delay=0.05, restore_state_after=True, exact=True)
-
 
 class Ai:
     def __init__(self):
@@ -148,7 +94,7 @@ class App:
     def _complete_codex_js_sandbox(self):
         copied = pyperclip.paste()
         print('-' * 40, 'Copied:')
-        print(f'{copied[0:60]}...')
+        print(f'{copied[0:100]}...')
 
         code = self.prompt_start + copied
         response = self.ai.complete_code(code)
