@@ -23,14 +23,13 @@ import time
 #         time.sleep(0.1)
 
 def copy_text():
-    # time.sleep(1)
-    state = keyboard.stash_state()
-    print(state)
     old = pyperclip.paste()
+    time.sleep(0.5)
     keyboard.send('ctrl+a')
-    time.sleep(0.1)
+    time.sleep(0.5)
     keyboard.send('ctrl+c')
     text = pyperclip.paste()
+    time.sleep(0.1)
     pyperclip.copy(old)
     return text
 
@@ -51,6 +50,61 @@ def beep_success():
 
 def beep_cancel():
     keyboard.call_later(lambda: beepy.beep(sound=3), delay=0)
+
+class Kb:
+    def __init__(self):
+        self.cbs = {}
+        #     'alt gr': {
+        #         'k': lambda: print('k'),
+        #         'l': lambda: print('l'),
+        #     },
+        #     'ctrl': {
+        #         'y': lambda: print('y'),
+        #     },
+        # }
+
+    def add_hotkey(self, hotkey, cb):
+        keys = hotkey.split(', ')
+        lvl = self.cbs
+        for i, key in enumerate(keys):
+            if key not in lvl:
+                if i < len(keys) - 1:
+                    lvl[key] = {}
+                else:
+                    lvl[key] = cb
+            lvl = lvl[key]
+
+    def resume(self):
+        self.level = self.cbs
+        print(self.level)
+        keyboard.on_release(lambda key: self._handle_key(key))
+
+    def pause(self):
+        keyboard.unhook_all()
+
+    def _handle_key(self, key):
+        print(key.name)
+        if key.name in self.level:
+            cb = self.level[key.name]
+            if callable(cb):
+                try:
+                    cb()
+                except BaseException as err:
+                    print(err)
+            else:
+                self.level = cb
+        else:
+            self.level = self.cbs
+
+    def write(self, text):
+        """
+        with delay <=0.03 vscode sometimes inserts unexpected completions that interfere with input
+        Disable "Editor › Inline Suggest: Enabled" option in vscode for more stable behavior.
+        without exact=True '{' and '}' cause strange behaviour
+        without restore_state_after=True it appears that some keys (e.g. 'ctrl') may stay pressed
+        """
+        keyboard.write(text, delay=0.05, restore_state_after=True, exact=True)
+
 
 class Ai:
     def __init__(self):
@@ -75,38 +129,21 @@ class Ai:
             yield part["choices"][0]["text"]
 
 class App:
-    def __init__(self, ai):
+    def __init__(self, ai, kb):
         self.ai = ai
+        self.kb = kb
         self.prompt_start = ''
-        self.cbs = []
 
     def _hotkey(self, keys, fn, args=[]):
         cb = lambda: self._run(fn)
-        keyboard.add_hotkey(keys, callback=cb, args=args, suppress=True, timeout=1, trigger_on_release=True)
-        self.cbs.append(cb)
-
-    def _hook(self):
-        self._hotkey('alt gr+j', self._complete_codex_js_sandbox)
-        # self._hotkey('alt gr+s', self._complete_all_codex_js_sandbox)
-
-    def _unhook(self):
-        for cb in self.cbs:
-            keyboard.remove_hotkey(cb)
-        self.cbs = []
+        self.kb.add_hotkey(keys, cb)
 
     def init(self):
         filepath = sys.argv[1] if len(sys.argv) > 1 else 'prompt.txt'
         self.prompt_start = open(filepath).read()
-        self._hook()
-
-    def _type(self, text):
-        """
-        with delay <=0.03 vscode sometimes inserts unexpected completions that interfere with input
-        Disable "Editor › Inline Suggest: Enabled" option in vscode for more stable behavior.
-        without exact=True '{' and '}' cause strange behaviour
-        without restore_state_after=True it appears that some keys (e.g. 'ctrl') may stay pressed
-        """
-        keyboard.write(text, delay=0.03, restore_state_after=True, exact=True)
+        # self._hotkey('alt gr, i', self._complete_codex_js_sandbox)
+        self._hotkey('alt gr, alt gr', self._complete_codex_js_sandbox)
+        self.kb.resume()
 
     def _complete_codex_js_sandbox(self):
         copied = pyperclip.paste()
@@ -122,7 +159,6 @@ class App:
         copied = copy_text()
         print('-' * 40, 'Copied:')
         print(f'{copied[0:60]}...')
-        return
 
         code = self.prompt_start + copied
         response = self.ai.complete_code(code)
@@ -133,7 +169,7 @@ class App:
 
     def _run(self, fn):
         """unhook, run fn, handle errors, handle cancel, type, hook"""
-        self._unhook()
+        self.kb.pause()
         try:
             print('=' * 60)
             res = fn()
@@ -143,18 +179,21 @@ class App:
                 if keyboard.is_pressed('esc'):
                     print('CANCELED')
                     beep_cancel()
+                    self.kb.resume()
+                    return
                 parts.append(part)
                 print(part, end='')
-                self._type(part)
+                self.kb.write(part)
             print('OK')
         except BaseException as err:
             print('ERROR')
             print(err)
             beep_cancel()
-        self._hook()
+        self.kb.resume()
 
 ai = Ai()
-app = App(ai)
+kb = Kb()
+app = App(ai, kb)
 
 def main():
     app.init()
