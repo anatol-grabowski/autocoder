@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+pyperclip = "*"
+keyboard = "*"
+beepy = "*"
+pygame = "*"
+openai = "*"
+watchdog = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+
+[scripts]
+start = "python main.py"
+watch = "watchmedo auto-restart --directory .  --recursive python main.py"
