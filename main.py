@@ -27,15 +27,19 @@ class App:
     def __init__(self, ai, kb):
         self.ai = ai
         self.kb = kb
-        self.prompt_start = ''
+        self.prompts = {}
 
     def _hotkey(self, keys, fn, args=[]):
         cb = lambda: self._run(fn)
         self.kb.add_hotkey(keys, cb)
 
+    def _read_prompts(self):
+        """read prompts from files in ./prompts to a dict"""
+        for filename in os.listdir('prompts'):
+            self.prompts[filename] = open('prompts/' + filename).read()
+
     def init(self):
-        filepath = sys.argv[1] if len(sys.argv) > 1 else 'prompt.txt'
-        self.prompt_start = open(filepath).read()
+        self._read_prompts()
         self._hotkey('alt gr, alt gr', self._autodetected_action)
         self.kb.resume()
 
@@ -48,7 +52,8 @@ class App:
         if js_comment is not None:
             lang = 'js'
 
-        py_comment_re = '\s*"""(.*)"""\s*'
+        # py_comment_re = '\s*"""(.*)"""\s*'
+        py_comment_re = '\s*#(.*)\s*'
         py_comment = re.search(py_comment_re, text)
         if py_comment is not None:
             lang = 'py'
@@ -83,10 +88,11 @@ class App:
 
         stop = None
         if lang == 'js' and action != 'edit':
-            text = self.prompt_start + text
+            text = self.prompts['prompt.js'] + text
             stop = ['/* ']
         if lang == 'py' and action != 'edit':
-            stop = ['"""']
+            text = self.prompts['prompt.py'] + text
+            stop = ['"""', '#']
 
         if action == 'insert':
             return self.ai.complete(eng, text, opt, stop)

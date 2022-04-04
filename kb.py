@@ -95,4 +95,3 @@ class Kb:
         keyboard.send('right shift+ins') # seems to be the most reliable way to insert text anywhere
         time.sleep(0.05) # if clipboard content is changed too soon the output may be unstable
         pyperclip.copy(old)
-
