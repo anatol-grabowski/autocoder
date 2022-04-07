@@ -1,0 +1,50 @@
+# List: Levels of classification of living beings
+- kingdom
+- phylum
+- class
+- order
+- family
+- subfamily
+- genus
+
+# List: Topmost branches of classification of living beings
+- archaebacteria
+- eubacteria
+- protista
+- chromista
+- fungi
+- plantae
+- animalia
+
+# List: Nucleobases of DNA with their symbols in parentheses
+- adenine (A)
+- cytosine (C)
+- guanine (G)
+- thymine (T)
+
+# List: Continents located entirely in western hemisphere with links to wikipedia
+- [North America](https://en.wikipedia.org/wiki/North_America)
+- [South America](https://en.wikipedia.org/wiki/South_America)
+
+# List: Topmost branches of mathematics with short definitions
+- pure - study of mathematical concepts independently of any application outside mathematics
+- applied - application of mathematical methods by other sciences
+
+# List: Branches of classification (2 levels deep) of elementary particles
+- fermions
+  - quarks
+  - leptons
+- bosons
+  - gauge bosons
+  - scalar bosons
+
+# List: Full classification of elementary fermions with their symbols in parentheses
+- quarks
+  - up (u) / down (d)
+  - charm (c) / strange (s)
+  - top (t) / bottom (b)
+- leptons
+  - electron ($e^−$) / electron neutrino ($\nu_e$)
+  - muon ($\mu^−$) / muon neutrino ($\nu_\mu$)
+  - Tau ($\tau^−$) / tau neutrino ($\nu_\tau$)
+
