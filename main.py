@@ -12,6 +12,7 @@ import re
 
 from kb import Kb
 from ai import Ai
+from submodel import Submodel
 
 def beep_start():
     keyboard.call_later(lambda: beepy.beep(sound=1), delay=0)
@@ -22,12 +23,11 @@ def beep_success():
 def beep_cancel():
     keyboard.call_later(lambda: beepy.beep(sound=3), delay=0)
 
-
 class App:
     def __init__(self, ai, kb):
         self.ai = ai
         self.kb = kb
-        self.prompts = {}
+        self.models = []
 
     def _hotkey(self, keys, fn, args=[]):
         cb = lambda: self._run(fn)
@@ -35,71 +35,38 @@ class App:
 
     def _read_prompts(self):
         """read prompts from files in ./prompts to a dict"""
-        for filename in os.listdir('prompts'):
-            self.prompts[filename] = open('prompts/' + filename).read()
+        for filename in sorted(os.listdir('prompts')):
+            s = open('prompts/' + filename).read()
+            model = Submodel(ai)
+            try:
+                model.loads(s)
+                model.filename = filename
+                self.models.append(model)
+                print(f'Loaded {filename}', f"'{model.options['pattern']}'")
+            except BaseException as err:
+                print(f'Skipped {filename}', err)
 
     def init(self):
         self._read_prompts()
         self._hotkey('alt gr, alt gr', self._autodetected_action)
         self.kb.resume()
 
-    def _autodetect(self, text):
-        """return action, lang, text, suffix/instructions"""
-        lang = 'text'
-
-        js_comment_re = '\s*/\*(.*)\*/\s*'
-        js_comment = re.search(js_comment_re, text)
-        if js_comment is not None:
-            lang = 'js'
-
-        # py_comment_re = '\s*"""(.*)"""\s*'
-        py_comment_re = '\s*#(.*)\s*'
-        py_comment = re.search(py_comment_re, text)
-        if py_comment is not None:
-            lang = 'py'
-
-        insert_re = '___'
-        insert = re.search(insert_re, text)
-        if insert is not None:
-            span = insert.span()
-            return 'insert', lang, text[:span[0]], text[span[1]:]
-
-        edit_re = '\n(.*)!!![\w\W]*'
-        edit = re.search(edit_re, text)
-        if edit is not None:
-            if edit[1].strip() == '#':
-                lang == 'py'
-            if edit[1].strip() == '//':
-                lang == 'js'
-            edit_lines_re = re.compile('.*!!!(.*)', re.M)
-            edit_lines = [m.strip() for m in edit_lines_re.findall(text)]
-            instruction = '\n'.join(edit_lines)
-            clean_text = re.sub(edit[0], '', text)
-            return 'edit', lang, clean_text, instruction
-        return 'complete', lang, text, None
+    def _find_model(self, text):
+        for model in self.models:
+            does_match = model.match(text)
+            if does_match: return model
 
     def _autodetected_action(self):
         copied = pyperclip.paste()
-        action, lang, text, opt = self._autodetect(copied)
-        eng = 'text' if lang == 'text' else 'code'
-        print(action, lang, eng)
-        print('text:', text)
-        print('opt:', opt)
+        print('text:', copied)
 
-        stop = None
-        if lang == 'js' and action != 'edit':
-            text = self.prompts['prompt.js'] + text
-            stop = ['/* ']
-        if lang == 'py' and action != 'edit':
-            text = self.prompts['prompt.py'] + text
-            stop = ['"""', '#']
+        model = self._find_model(copied)
+        if model is None:
+            print('Could not find matching pattern')
+            return
 
-        if action == 'insert':
-            return self.ai.complete(eng, text, opt, stop)
-        if action == 'complete':
-            return self.ai.complete(eng, text, opt, stop)
-        if action == 'edit':
-            return self.ai.edit(eng, text, opt)
+        print('model:', model.filename, model.options['pattern'])
+        return model.process(copied)
 
     def _run(self, fn):
         """unhook, run fn, handle errors, handle cancel, type, hook"""

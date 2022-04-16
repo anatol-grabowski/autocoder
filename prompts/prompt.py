@@ -1,3 +1,16 @@
+{
+  "pattern": "^\\s*(# py: )",
+  "model": {
+    "engine": "code-davinci-002",
+    "temperature": 0.0,
+    "top_p": 1,
+    "max_tokens": 1000,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stop": "\n # py:"
+  }
+}
+
 # I start with a blank python file, and incrementally modify it by adding code.
 # Libraries (e.g. os, sys, re, json, np, etc.) are imported.
 
@@ -19,3 +32,4 @@ def read_json_field(obj, path):
             key = part[1]
         val = val[key]
     return val
+
