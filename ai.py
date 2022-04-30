@@ -4,13 +4,17 @@ class Ai:
     def __init__(self, openai_api_key):
         openai.api_key = openai_api_key
         if (openai.api_key is None or openai.api_key == ''):
-            raise BaseException('no openai.api_key')
+            raise Exception('no openai.api_key')
 
     def complete(self, params):
         params['stream'] = True
         response = openai.Completion.create(**params)
         for part in response:
-            if part["choices"][0]["finish_reason"] is not None: return
+            finish_reason = part["choices"][0]["finish_reason"]
+            if finish_reason is not None:
+                if finish_reason != 'stop':
+                    print('FINISH', finish_reason, part['choices'][0]['text'])
+                return
             yield part["choices"][0]["text"]
 
     def edit(self, eng, prompt, instruction):

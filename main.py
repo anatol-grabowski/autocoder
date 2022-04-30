@@ -43,7 +43,7 @@ class App:
                 model.filename = filename
                 self.models.append(model)
                 print(f'Loaded {filename}', f"'{model.options['pattern']}'")
-            except BaseException as err:
+            except Exception as err:
                 print(f'Skipped {filename}', err)
 
     def init(self):
@@ -64,6 +64,7 @@ class App:
         if model is None:
             print('Could not find matching pattern')
             return
+        insert = re.search('___', copied)
 
         print('model:', model.filename, model.options['pattern'])
         return model.process(copied)
@@ -84,7 +85,7 @@ class App:
                 print(part, end='')
                 self.kb.write(part)
             print('OK')
-        except BaseException as err:
+        except Exception as err:
             print('ERROR')
             print(err)
             beep_cancel()

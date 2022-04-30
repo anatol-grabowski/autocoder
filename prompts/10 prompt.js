@@ -1,5 +1,5 @@
 {
-  "pattern": "^\\s*(/\\* js: )|(// js: )",
+  "pattern": "^\\s*(/\\* js: )|(// js: )|(/\\* )|(/\\*\\*\\n)|(// )",
   "model": {
     "engine": "code-davinci-002",
     "temperature": 0.0,

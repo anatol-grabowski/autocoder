@@ -23,9 +23,9 @@ class Submodel:
         header, prefix = conf[:h_end], conf[p_start:]
         options = json.loads(header)
         if 'pattern' not in options:
-            raise BaseException(f'No pattern in config')
+            raise Exception(f'No pattern in config')
         if 'model' not in options:
-            raise BaseException(f'No model in config')
+            raise Exception(f'No model in config')
         self.options = options
         self.prefix = prefix
 

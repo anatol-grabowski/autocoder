@@ -1,0 +1,13 @@
+{
+  "pattern": "^#",
+  "model": {
+    "engine": "code-davinci-002",
+    "temperature": 0.1,
+    "top_p": 1,
+    "max_tokens": 1000,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stop": "\n\n"
+  }
+}
+

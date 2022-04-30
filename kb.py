@@ -75,7 +75,7 @@ class Kb:
             if callable(cb):
                 try:
                     cb()
-                except BaseException as err:
+                except Exception as err:
                     print(err)
             else:
                 self.level = cb

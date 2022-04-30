@@ -1,7 +1,8 @@
 {
+  "pattern": "^# List: ",
   "model": {
     "engine": "code-davinci-002",
-    "temperature": 0.2,
+    "temperature": 0.1,
     "top_p": 1,
     "max_tokens": 1000,
     "frequency_penalty": 0,
@@ -60,35 +61,3 @@
   - muon ($\mu^−$) / muon neutrino ($\nu_\mu$)
   - Tau ($\tau^−$) / tau neutrino ($\nu_\tau$)
 
-# List: Espresso based coffee drinks with the amounts of their ingredients and notes in parentheses if any
-- black coffee (without milk)
-  - single espresso
-    - espresso, 20..25g
-  - doppio (double espresso)
-    - espresso, 40..50g
-  - americano
-    - espresso, 20..25g
-    - water, 100g
-  - lungo
-    - espresso, 20..25g
-    - water, 20..25g (often served separately)
-- milk coffee
-  - macchiato, 70ml cup
-    - espresso (single), 1 part
-    - milk, ~2 parts
-  - cortado, 110ml cup (often served in a glass cup)
-    - espresso (single), 1 part
-    - milk, ~4 parts
-  - flat white, 190ml cup (often served in a glass cup)
-    - espresso (double), 1 part
-    - milk, ~4 parts
-  - cappuccino, 150ml cup
-    - espresso (single), 1 part
-    - milk, 6..7 parts
-  - latte, 250ml cup
-    - espresso (single), 1 part
-    - milk, ~14 parts
-  - mocha, 250ml cup
-    - espresso (single), 1 part
-    - milk, ~14 parts
-    - chocolate, ~1 part
