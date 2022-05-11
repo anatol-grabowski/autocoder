@@ -1,0 +1,124 @@
+
+
+// js:
+strs.join(',')
+# py:
+','.join(strs)
+
+// js:
+str.split(',')
+# py:
+str.split(',')
+
+# py:
+str.strip()
+// js:
+str.trim()
+
+// js:
+Object.entries(obj)
+# py:
+vars(obj).items()
+
+# py:
+[].append(1)
+// js:
+[].push(1)
+
+// js:
+[].push(...[1, 2])
+# py:
+[].extend([1, 2])
+
+# py:
+'a' in { 'a': 2 }
+// js:
+'a' in { 'a': 2 }
+
+// js:
+`val is ${val}`
+# py:
+f'val is {val}'
+
+// js:
+yield *fn()
+# py:
+yield from fn()
+
+# py:
+{1}.add(2)
+// js:
+new Set([1]).add(2)
+
+// js:
+['ss','l', 'slf'].sort((a, b) => a.length - b.length)
+# py:
+sorted(['ss','l', 'slf'], key = len)
+
+// js:
+['ss','l', 'slf'].map(s => s.length)
+# py:
+[*map(len, ['ss','l', 'slf'])]
+
+# py:
+for i in range(2): ...
+// js:
+for (let i = 0; i < 2; i += 1) { ... }
+
+# py:
+lambda a: 3
+// js:
+(a) => 3
+
+// js:
+JSON.parse('{ "a": 123 }')
+# py:
+json.loads('{ "a": 123 }')
+
+# py:
+json.dumps({ "a": 123 }, indent=2)
+// js:
+JSON.stringify({ a: 123 }, null, 2)
+
+// js:
+path.join('dir', 'd2', 'd3')
+# py:
+os.path.join('dir', 'd2', 'd3')
+
+# py:
+os.scandir(dirpath)
+// js:
+fs.readdir(dirpath)
+
+// js:
+'abcb'.replace(/b/g, 'x')
+# py:
+re.sub('b', 'x', 'abcb')
+
+# py:
+with os.popen('ls -la') as f:
+    print(f.readlines())
+// js:
+child_process.exec('ls -la', (err, stdout, stderr) => {
+  console.log(stdout)
+})
+
+# py:
+re.match('\W', 'abc de')
+// js:
+'abc de'.match(/^\W/)
+
+// js:
+'abc de'.match(/^\W/)
+# py:
+re.search('^\W', 'abc de')
+
+# py:
+re.search('\W', 'abc de')
+// js:
+'abc de'.match(/\W/)
+
+# py:
+print('hi', end='')
+// js:
+process.stdout.write('hi')

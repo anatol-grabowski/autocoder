@@ -1,0 +1,56 @@
+{
+  "pattern": "\\n\\s*# Ajv:$",
+  "model": {
+    "engine": "code-davinci-002",
+    "temperature": 0.0,
+    "top_p": 1,
+    "max_tokens": 1000,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stop": "\n\n"
+  }
+}
+
+locationVerification: {
+  result: 'notVerivied', //nonNulable. Possible: notVerivied, verified, none
+  type: 'beacon', // nulable. Possible: beacon, wifi, gps, ip
+  verifiedByIds: [1],  //nulable. System IDs of beacon, wifi, etc.
+}
+  # Ajv:
+  "locationVerification": {
+    "type": "object",
+    "properties": {
+      "result": {
+        "type": "string",
+        "enum": ["notVerified", "verified", "none"]
+      },
+      "type": {
+        "type": ["string", "null"],
+        "enum": ["gps", "ip", "wifi", "beacon", "none"]
+      },
+      "verifiedByids": {
+        "type": ["array", "null"],
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  },
+
+"customLocation": { // nulable
+    "lat": 0,
+    "lng": 0
+  },
+    # Ajv:
+    "customLocation": {
+      "type": ["object", "null"],
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
+    },
+
